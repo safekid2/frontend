@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student - SafeKids</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+        .select2-container--bootstrap-5 .select2-dropdown .select2-results__options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="dashboard.html">SafeKids</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="add-parent.html">Add Parent</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="add-students.html">Add Student</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="qr-scanner.html">QR Scanner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="logs.html">Logs</a>
+                    </li>
+                </ul>
+                <button id="logoutBtn" class="btn btn-outline-light">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Add New Student</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="studentForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="studentName" class="form-label">Student Name</label>
+                                    <input type="text" class="form-control" id="studentName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="grade" class="form-label">Grade/Class</label>
+                                    <input type="text" class="form-control" id="grade" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="parentSelect" class="form-label">Select Parent/Guardian</label>
+                                <select class="form-select" id="parentSelect" required>
+                                    <option value="" selected disabled>Select a parent or add new</option>
+                                    <!-- Options will be loaded dynamically -->
+                                </select>
+                                <div class="form-text">Can't find the parent? <a href="add-parent.html">Add a new parent</a></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Authorized Pickup Persons</label>
+                                <div id="authorizedPersons">
+                                    <!-- Authorized persons will be listed here -->
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addPersonBtn">
+                                    <i class="bi bi-plus-circle"></i> Add Authorized Person
+                                </button>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Additional Notes</label>
+                                <textarea class="form-control" id="notes" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="reset" class="btn btn-outline-secondary me-md-2">Reset</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Save Student
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authorized Person Modal -->
+    <div class="modal fade" id="personModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Authorized Person</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="personForm">
+                        <div class="mb-3">
+                            <label for="personName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="personName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="relation" class="form-label">Relation to Student</label>
+                            <input type="text" class="form-control" id="relation" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="personPhone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="personPhone" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="savePersonBtn">Add Person</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message"></div>
+        </div>
+    </div>
+
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (!isAuthenticated()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Initialize Select2 with empty data
+            let select2 = $('#parentSelect').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select a parent or add new',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('body') // Ensure dropdown is visible in modals
+            });
+
+            // Load parents from API
+            async function loadParents() {
+                try {
+                    // Show loading state
+                    $('#parentSelect').empty().append('<option value="" selected disabled>Loading parents...</option>');
+                    
+                    // Make API call to fetch parents
+                    const response = await axios.get(`${API_BASE_URL}/parents`, {
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`
+                        }
+                    });
+                    
+                    if (response.data && response.data.success) {
+                        const parents = response.data.data.map(parent => ({
+                            id: parent._id || parent.id,
+                            text: `${parent.name} (${parent.email})`,
+                            ...parent
+                        }));
+                        
+                        // Update the select2 dropdown with real data
+                        const defaultOption = new Option('Select a parent or add new', '', true, true);
+                        defaultOption.disabled = true;
+                        
+                        // Clear and add new options
+                        $('#parentSelect').empty().append(defaultOption);
+                        
+                        // Add parent options
+                        parents.forEach(parent => {
+                            const option = new Option(
+                                `${parent.name} (${parent.email})`,
+                                parent.id,
+                                false,
+                                false
+                            );
+                            $('#parentSelect').append(option);
+                        });
+                        
+                        // Reinitialize select2 with the new options
+                        $('#parentSelect').trigger('change');
+                    } else {
+                        throw new Error('Failed to load parents');
+                    }
+                } catch (error) {
+                    console.error('Error loading parents:', error);
+                    showToast('Error', 'Failed to load parents. Please try again.', 'error');
+                    
+                    // Reset to empty state
+                    $('#parentSelect').empty().append('<option value="" selected disabled>Error loading parents</option>');
+                }
+            }
+            
+            // Format parent option in the dropdown (for when using AJAX)
+            function formatParentOption(parent) {
+                if (!parent.id) return parent.text; // For the placeholder
+                
+                // If we're displaying the selected value
+                if (parent.element && parent.element.selected) {
+                    return $(`
+                        <div>
+                            <strong>${parent.text.split(' (')[0]}</strong>
+                        </div>
+                    `);
+                }
+                
+                // For options in the dropdown
+                if (parent.name) {
+                    return $(`
+                        <div>
+                            <strong>${parent.name || 'Unknown'}</strong>
+                            <div class="text-muted small">
+                                ${parent.email || ''} ${parent.phone ? `• ${parent.phone}` : ''}
+                            </div>
+                        </div>
+                    `);
+                }
+                
+                // Fallback
+                return parent.text;
+            }
+
+            // Load parents on page load
+            loadParents();
+            
+            // Listen for parent added events
+            window.addEventListener('parentAdded', function() {
+                loadParents();
+            });
+
+            // Authorized persons array
+            const authorizedPersons = [];
+            const personModal = new bootstrap.Modal(document.getElementById('personModal'));
+            
+            // Add person button click
+            document.getElementById('addPersonBtn').addEventListener('click', function() {
+                document.getElementById('personForm').reset();
+                personModal.show();
+            });
+            
+            // Save person
+            document.getElementById('savePersonBtn').addEventListener('click', function() {
+                const name = document.getElementById('personName').value;
+                const relation = document.getElementById('relation').value;
+                const phone = document.getElementById('personPhone').value;
+                
+                if (!name || !relation || !phone) {
+                    showToast('Error', 'Please fill all fields', 'error');
+                    return;
+                }
+                
+                const person = { name, relation, phone, id: Date.now() };
+                authorizedPersons.push(person);
+                updateAuthorizedPersonsList();
+                personModal.hide();
+                showToast('Success', 'Authorized person added', 'success');
+            });
+            
+            // Update authorized persons list
+            function updateAuthorizedPersonsList() {
+                const container = document.getElementById('authorizedPersons');
+                container.innerHTML = '';
+                
+                if (authorizedPersons.length === 0) {
+                    container.innerHTML = '<div class="text-muted mb-2">No authorized persons added yet</div>';
+                    return;
+                }
+                
+                authorizedPersons.forEach((person, index) => {
+                    const personDiv = document.createElement('div');
+                    personDiv.className = 'card mb-2';
+                    personDiv.innerHTML = `
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">${person.name}</h6>
+                                    <small class="text-muted">${person.relation} • ${person.phone}</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-person" data-id="${person.id}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(personDiv);
+                });
+                
+                // Add event listeners to remove buttons
+                document.querySelectorAll('.remove-person').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        const index = authorizedPersons.findIndex(p => p.id === id);
+                        if (index > -1) {
+                            authorizedPersons.splice(index, 1);
+                            updateAuthorizedPersonsList();
+                        }
+                    });
+                });
+            }
+            
+            // Initial empty state
+            updateAuthorizedPersonsList();
+            
+            // Form submission
+            document.getElementById('studentForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const studentData = {
+                    name: document.getElementById('studentName').value,
+                    grade: document.getElementById('grade').value,
+                    parentId: document.getElementById('parentSelect').value,
+                    authorizedPersons: [...authorizedPersons],
+                    notes: document.getElementById('notes').value
+                };
+                
+                if (!studentData.parentId) {
+                    showToast('Error', 'Please select a parent/guardian', 'error');
+                    return;
+                }
+                
+                try {
+                    // In a real app, you would save this to your backend
+                    // const response = await axios.post('/api/students', studentData);
+                    
+                    // Show success message
+                    showToast('Success', 'Student added successfully!', 'success');
+                    
+                    // Reset form
+                    this.reset();
+                    $('#parentSelect').val(null).trigger('change');
+                    authorizedPersons.length = 0;
+                    updateAuthorizedPersonsList();
+                    
+                } catch (error) {
+                    console.error('Error adding student:', error);
+                    showToast('Error', 'Failed to add student. Please try again.', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

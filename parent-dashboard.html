@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard - SafeKids</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- QR Code CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: #0d6efd;
+            color: white;
+            padding: 1rem 0;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+        .qr-code-container {
+            text-align: center;
+            padding: 2rem;
+        }
+        #qrCode {
+            max-width: 300px;
+            margin: 0 auto 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #0d6efd;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-right: 1.5rem;
+        }
+        .profile-info h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .profile-info p {
+            margin: 0.25rem 0 0;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="position-sticky">
+                    <div class="text-center mb-4 mt-3">
+                        <h4>SafeKids</h4>
+                        <small class="text-white-50">Parent Portal</small>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="bi bi-qr-code-scan"></i> My QR Code
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="parent-children.html">
+                                <i class="bi bi-people"></i> My Children
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="parent-history.html">
+                                <i class="bi bi-clock-history"></i> Pickup History
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="parent-notifications.html">
+                                <i class="bi bi-bell"></i> Notifications
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">
+                                    3
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="userInitials">
+                        <!-- Initials will be set by JS -->
+                    </div>
+                    <div class="profile-info">
+                        <h4 id="userName">Loading...</h4>
+                        <p id="userEmail">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- QR Code Section -->
+                    <div class="col-lg-8">
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span>Your Pickup QR Code</span>
+                                    <div class="text-muted small" id="qrRefreshTimer">Refreshing in 10:00</div>
+                                </div>
+                                <div>
+                                    <button id="refreshQR" class="btn btn-sm btn-outline-primary me-2" title="Refresh QR Code">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                    <button id="downloadQR" class="btn btn-sm btn-outline-primary me-2" disabled>
+                                        <i class="bi bi-download"></i> Download
+                                    </button>
+                                    <button id="printQR" class="btn btn-sm btn-outline-secondary" disabled>
+                                        <i class="bi bi-printer"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="qr-code-container">
+                                    <div id="qrCode">
+                                        <p class="text-muted">Loading QR code...</p>
+                                    </div>
+                                    <h5>Your Pickup QR Code</h5>
+                                    <p class="text-muted">Show this code when picking up your child</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="col-lg-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                Quick Actions
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <a href="parent-children.html" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-person-plus me-2"></i> Add New Child
+                                </a>
+                                <a href="parent-history.html" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-calendar-plus me-2"></i> Schedule Pickup
+                                </a>
+                                <a href="parent-profile.html" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-pencil-square me-2"></i> Update Profile
+                                </a>
+                                <a href="parent-notifications.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-bell me-2"></i> View Notifications</span>
+                                    <span class="badge bg-primary rounded-pill">3</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Activity -->
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Recent Activity</span>
+                                <a href="parent-notifications.html" class="btn btn-sm btn-link">View All</a>
+                            </div>
+                            <div class="list-group list-group-flush" id="recentActivity">
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">Emma checked in</h6>
+                                        <small class="text-muted">30m ago</small>
+                                    </div>
+                                    <p class="mb-1 small text-muted">Room 3 - Ms. Johnson</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">Noah picked up</h6>
+                                            <small class="text-muted">
+                                                <div class="d-flex w-100 justify-content-between">
+                                                    <h6 class="mb-1">Noah picked up</h6>
+                                                    <small class="text-muted">2h ago</small>
+                                                </div>
+                                                <p class="mb-1 small text-muted">By: You</p>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Children List -->
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>My Children</span>
+                                <a href="parent-children.html" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus-lg"></i> Add Child
+                                </a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Child</th>
+                                                <th>Grade/Class</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="childrenList">
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Upcoming Events -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Upcoming Events</span>
+                                <a href="#" class="btn btn-sm btn-link">View Calendar</a>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100">
+                                        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded me-3 text-center" style="width: 40px;">
+                                            <div class="fw-bold">JUN</div>
+                                            <div class="fw-bold">5</div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Field Trip</h6>
+                                            <p class="mb-0 small text-muted">Science Museum - Grade 3</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100">
+                                        <div class="bg-success bg-opacity-10 text-success p-2 rounded me-3 text-center" style="width: 40px;">
+                                            <div class="fw-bold">JUN</div>
+                                            <div class="fw-bold">12</div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Parent-Teacher Conference</h6>
+                                            <p class="mb-0 small text-muted">3:00 PM - 5:00 PM</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100">
+                                        <div class="bg-warning bg-opacity-10 text-warning p-2 rounded me-3 text-center" style="width: 40px;">
+                                            <div class="fw-bold">JUN</div>
+                                            <div class="fw-bold">20</div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">School Concert</h6>
+                                            <p class="mb-0 small text-muted">School Auditorium - 6:00 PM</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Title</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message">
+                Message goes here
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // Global variables for QR code refresh
+        let qrRefreshTimer = null;
+        const qrRefreshInterval = 10 * 60 * 1000; // 10 minutes in milliseconds
+        let timeLeft = qrRefreshInterval;
+        let qrRefreshTimeout = null;
+
+        // Format time in MM:SS
+        function formatTime(ms) {
+            const totalSeconds = Math.ceil(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Update the QR code refresh timer display
+        function updateQrTimerDisplay() {
+            const timerElement = document.getElementById('qrRefreshTimer');
+            if (timerElement) {
+                timerElement.textContent = `Refreshing in ${formatTime(timeLeft)}`;
+            }
+        }
+
+        // Refresh QR code function
+        async function refreshQRCode() {
+            const qrCodeElement = document.getElementById('qrCode');
+            if (!qrCodeElement || !currentUser) return;
+
+            // Clear existing QR code
+            qrCodeElement.innerHTML = '';
+            
+            // Disable buttons while refreshing
+            document.getElementById('downloadQR').disabled = true;
+            document.getElementById('printQR').disabled = true;
+            
+            // Show loading state
+            const refreshButton = document.getElementById('refreshQR');
+            const originalHtml = refreshButton.innerHTML;
+            refreshButton.disabled = true;
+            refreshButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            
+            try {
+                // Generate new QR code with current timestamp
+                await generateQRCode({
+                    userId: currentUser.id,
+                    timestamp: new Date().toISOString(),
+                    type: 'parent_pickup'
+                });
+                
+                // Restart the refresh timer
+                startQrRefreshTimer();
+                
+                showToast('Success', 'QR code updated', 'success');
+            } catch (error) {
+                console.error('Error refreshing QR code:', error);
+                showToast('Error', 'Failed to refresh QR code', 'error');
+            } finally {
+                // Restore button state
+                refreshButton.disabled = false;
+                refreshButton.innerHTML = originalHtml;
+            }
+        }
+
+        // Start the QR code refresh timer
+        function startQrRefreshTimer() {
+            // Clear any existing timer
+            if (qrRefreshTimer) {
+                clearInterval(qrRefreshTimer);
+            }
+            if (qrRefreshTimeout) {
+                clearTimeout(qrRefreshTimeout);
+            }
+            
+            // Reset time left
+            timeLeft = qrRefreshInterval;
+            updateQrTimerDisplay();
+            
+            // Start new timer
+            qrRefreshTimer = setInterval(() => {
+                timeLeft -= 1000; // Decrease by 1 second
+                updateQrTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(qrRefreshTimer);
+                    refreshQRCode();
+                }
+            }, 1000);
+        }
+
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!isAuthenticated()) {
+                window.location.href = 'parent-login.html';
+                return;
+            }
+
+            // Initialize toast
+            const toastEl = document.getElementById('toast');
+            const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+
+            // Show toast function
+            window.showToast = function(title, message, type = 'info') {
+                const toastTitle = document.getElementById('toast-title');
+                const toastMessage = document.getElementById('toast-message');
+                const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                
+                toastTitle.textContent = title;
+                toastMessage.textContent = message;
+                toastEl.className = `toast ${type === 'error' ? 'bg-danger text-white' : type === 'success' ? 'bg-success text-white' : ''}`;
+                toast.show();
+            };
+
+            // Get user data
+            async function loadUserData() {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/auth/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`
+                        }
+                    });
+                    
+                    // Store current user data
+                    currentUser = response.data.user;
+                    
+                    // Initialize QR code refresh timer
+                    startQrRefreshTimer();
+                    
+                    // Add click event for manual refresh
+                    const refreshButton = document.getElementById('refreshQR');
+                    if (refreshButton) {
+                        refreshButton.addEventListener('click', refreshQRCode);
+                    }
+
+                    if (response.data.success) {
+                        const user = response.data.data;
+                        document.getElementById('userName').textContent = user.name;
+                        document.getElementById('userEmail').textContent = user.email;
+                        
+                        // Set user initials
+                        const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+                        document.getElementById('userInitials').textContent = initials;
+
+                        // Generate QR code
+                        generateQRCode(JSON.stringify({
+                            id: user._id,
+                            name: user.name,
+                            role: 'parent'
+                        }));
+
+                        // Load children if any
+                        if (user.children && user.children.length > 0) {
+                            loadChildren(user.children);
+                        } else {
+                            document.getElementById('childrenList').innerHTML = `
+                                <tr>
+                                    <td colspan="3" class="text-center">No children found</td>
+                                </tr>`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                    showToast('Error', 'Failed to load user data', 'error');
+                }
+            }
+
+
+            // Load children data
+            async function loadChildren(childrenIds) {
+                try {
+                    const childrenList = document.getElementById('childrenList');
+                    childrenList.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
+
+                    const response = await axios.get(`${API_BASE_URL}/students?ids=${childrenIds.join(',')}`, {
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`
+                        }
+                    });
+
+                    if (response.data.success) {
+                        const children = response.data.data;
+                        if (children.length === 0) {
+                            childrenList.innerHTML = `
+                                <tr>
+                                    <td colspan="3" class="text-center">No children found</td>
+                                </tr>`;
+                            return;
+                        }
+
+                        childrenList.innerHTML = children.map(child => `
+                            <tr>
+                                <td>${child.name || 'N/A'}</td>
+                                <td>${child.grade || 'N/A'}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                        `).join('');
+                    }
+                } catch (error) {
+                    console.error('Error loading children:', error);
+                    childrenList.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center text-danger">Error loading children</td>
+                        </tr>`;
+                }
+            }
+
+            // Generate QR Code
+            function generateQRCode(data) {
+                try {
+                    const qrCodeElement = document.getElementById('qrCode');
+                    qrCodeElement.innerHTML = ''; // Clear previous QR code
+                    
+                    // Create a container for the QR code
+                    const container = document.createElement('div');
+                    qrCodeElement.appendChild(container);
+                    
+                    // Create a new QRCode instance
+                    const qr = new QRCode(container, {
+                        text: JSON.stringify(data),
+                        width: 200,
+                        height: 200,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                    
+                    // Get the image element and set up download/print
+                    const img = container.querySelector('img');
+                    if (img) {
+                        img.onload = function() {
+                            // Create a canvas to get the data URL
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+                            
+                            window.qrCodeDataURL = canvas.toDataURL('image/png');
+                            document.getElementById('downloadQR').disabled = false;
+                            document.getElementById('printQR').disabled = false;
+                        };
+                        
+                        // In case the image is already loaded
+                        if (img.complete) {
+                            img.onload();
+                        }
+                    } else {
+                        // Fallback if image is not available
+                        const canvas = container.querySelector('canvas');
+                        if (canvas) {
+                            window.qrCodeDataURL = canvas.toDataURL('image/png');
+                            document.getElementById('downloadQR').disabled = false;
+                            document.getElementById('printQR').disabled = false;
+                        } else {
+                            throw new Error('Failed to generate QR code');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error generating QR code:', error);
+                    showToast('Error', 'Failed to generate QR code. Please try again.', 'error');
+                    
+                    // Fallback: Show error message in the QR code container
+                    const qrCodeElement = document.getElementById('qrCode');
+                    qrCodeElement.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Failed to load QR code. Please refresh the page to try again.
+                        </div>
+                    `;
+                }
+            }
+
+            // Download QR Code
+            document.getElementById('downloadQR').addEventListener('click', function() {
+                if (!window.qrCodeDataURL) {
+                    showToast('Error', 'QR code not ready yet', 'error');
+                    return;
+                }
+                
+                const link = document.createElement('a');
+                link.download = 'safekids-qr-code.png';
+                link.href = window.qrCodeDataURL;
+                link.click();
+            });
+
+            // Print QR Code
+            document.getElementById('printQR').addEventListener('click', function() {
+                if (!window.qrCodeDataURL) {
+                    showToast('Error', 'QR code not ready yet', 'error');
+                    return;
+                }
+                
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Print QR Code</title>
+                        <style>
+                            body { text-align: center; padding: 20px; }
+                            h2 { margin-bottom: 20px; }
+                            img { max-width: 300px; margin: 0 auto; display: block; }
+                            .print-instructions {
+                                margin-top: 20px;
+                                padding: 15px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                max-width: 400px;
+                                margin: 20px auto;
+                                text-align: left;
+                            }
+                            @media print {
+                                .no-print { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>SafeKids Pickup QR Code</h2>
+                        <img src="${window.qrCodeDataURL}" alt="QR Code">
+                        <div class="print-instructions">
+                            <h4>Instructions:</h4>
+                            <ol>
+                                <li>Print this page</li>
+                                <li>Cut out the QR code</li>
+                                <li>Keep it in your wallet or phone case</li>
+                                <li>Show it when picking up your child</li>
+                            </ol>
+                        </div>
+                        <button class="btn btn-primary no-print" onclick="window.print()" style="margin-top: 20px;">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                        <button class="btn btn-secondary no-print" onclick="window.close()" style="margin-top: 20px; margin-left: 10px;">
+                            <i class="bi bi-x"></i> Close
+                        </button>
+                        <script>
+                            // Auto-print when the print window loads
+                            window.onload = function() {
+                                setTimeout(function() {
+                                    window.print();
+                                }, 500);
+                            };
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('Are you sure you want to logout?')) {
+                    localStorage.removeItem('safekids_auth_token');
+                    window.location.href = 'parent-login.html';
+                }
+            });
+
+            // Load initial data
+            loadUserData();
+        });
+    </script>
+</body>
+</html>

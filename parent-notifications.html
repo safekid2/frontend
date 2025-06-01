@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - SafeKids</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: #0d6efd;
+            color: white;
+            padding: 1rem 0;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .notification-item {
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+        }
+        .notification-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        .notification-item.unread {
+            background-color: #f0f7ff;
+            border-left-color: #0d6efd;
+        }
+        .notification-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .notification-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .notification-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .notification-item:hover .notification-actions {
+            opacity: 1;
+        }
+        .notification-category {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .category-alert {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+        .category-update {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        .category-reminder {
+            background-color: #d1e7dd;
+            color: #0a3622;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="text-center mb-4">
+                    <h4>SafeKids</h4>
+                    <p class="text-muted mb-0">Parent Portal</p>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-dashboard.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-profile.html">
+                            <i class="bi bi-person"></i> My Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-children.html">
+                            <i class="bi bi-people"></i> My Children
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-history.html">
+                            <i class="bi bi-clock-history"></i> Pickup History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="parent-notifications.html">
+                            <i class="bi bi-bell"></i> Notifications
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="unreadCount">
+                                3
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-danger" href="#" id="logoutBtn">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h2 mb-0">Notifications</h1>
+                        <p class="text-muted mb-0">Your recent alerts and updates</p>
+                    </div>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="markAllRead">
+                                <i class="bi bi-check2-all"></i> Mark all as read
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="clearAll">
+                                <i class="bi bi-trash"></i> Clear all
+                            </button>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-funnel"></i> Filter
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                                <li><a class="dropdown-item active" href="#" data-filter="all">All Notifications</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="unread">Unread Only</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" data-filter="alert">Alerts</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="update">Updates</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="reminder">Reminders</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications List -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="checkbox" value="" id="selectAll">
+                            </div>
+                            <h5 class="mb-0">Today</h5>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#todayNotifications" aria-expanded="true">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse show" id="todayNotifications">
+                        <div class="list-group list-group-flush" id="notificationsList">
+                            <!-- Notification items will be dynamically inserted here -->
+                            <div class="list-group-item notification-item unread" data-category="alert" data-id="1">
+                                <div class="d-flex align-items-start">
+                                    <div class="position-relative me-3">
+                                        <img src="https://ui-avatars.com/api/?name=School+Admin&background=dc3545&color=fff&size=200" 
+                                             alt="School Admin" class="notification-avatar">
+                                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                            <span class="visually-hidden">Alert</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">School Closure - Weather Alert</h6>
+                                                <p class="mb-1">Due to severe weather conditions, the school will be closed tomorrow, June 2nd.</p>
+                                            </div>
+                                            <div class="text-end" style="min-width: 100px;">
+                                                <span class="notification-category category-alert">Alert</span>
+                                                <div class="notification-time mt-1">2 hours ago</div>
+                                            </div>
+                                        </div>
+                                        <div class="notification-actions mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary me-1 mark-as-read" data-id="1">
+                                                <i class="bi bi-check2"></i> Mark as read
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="list-group-item notification-item unread" data-category="update" data-id="2">
+                                <div class="d-flex align-items-start">
+                                    <div class="position-relative me-3">
+                                        <img src="https://ui-avatars.com/api/?name=Emma+Smith&background=4e73df&color=fff&size=200" 
+                                             alt="Emma Smith" class="notification-avatar">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">Emma's Teacher Update</h6>
+                                                <p class="mb-1">Ms. Johnson: Emma had a great day today! She did excellent work in math class.</p>
+                                            </div>
+                                            <div class="text-end" style="min-width: 100px;">
+                                                <span class="notification-category category-update">Update</span>
+                                                <div class="notification-time mt-1">4 hours ago</div>
+                                            </div>
+                                        </div>
+                                        <div class="notification-actions mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary me-1 mark-as-read" data-id="2">
+                                                <i class="bi bi-check2"></i> Mark as read
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="list-group-item notification-item" data-category="reminder" data-id="3">
+                                <div class="d-flex align-items-start">
+                                    <div class="position-relative me-3">
+                                        <img src="https://ui-avatars.com/api/?name=School+Calendar&background=198754&color=fff&size=200" 
+                                             alt="Calendar" class="notification-avatar">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">Upcoming Field Trip</h6>
+                                                <p class="mb-1">Reminder: Grade 3 field trip to the Science Museum is this Friday. Don't forget to sign the permission slip!</p>
+                                            </div>
+                                            <div class="text-end" style="min-width: 100px;">
+                                                <span class="notification-category category-reminder">Reminder</span>
+                                                <div class="notification-time mt-1">Yesterday</div>
+                                            </div>
+                                        </div>
+                                        <div class="notification-actions mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary me-1">
+                                                <i class="bi bi-check2"></i> Mark as read
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Older Notifications -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="checkbox" value="" id="selectAllOlder">
+                            </div>
+                            <h5 class="mb-0">Older Notifications</h5>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#olderNotifications" aria-expanded="true">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse show" id="olderNotifications">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item notification-item" data-category="update" data-id="4">
+                                <div class="d-flex align-items-start">
+                                    <div class="position-relative me-3">
+                                        <img src="https://ui-avatars.com/api/?name=Noah+Johnson&background=36b9cc&color=fff&size=200" 
+                                             alt="Noah Johnson" class="notification-avatar">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">Noah's Progress Report</h6>
+                                                <p class="mb-1">Noah's progress report is now available. He's doing great in reading and math!</p>
+                                            </div>
+                                            <div class="text-end" style="min-width: 100px;">
+                                                <span class="notification-category category-update">Update</span>
+                                                <div class="notification-time mt-1">May 28</div>
+                                            </div>
+                                        </div>
+                                        <div class="notification-actions mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary me-1">
+                                                <i class="bi bi-check2"></i> Mark as read
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="list-group-item notification-item" data-category="alert" data-id="5">
+                                <div class="d-flex align-items-start">
+                                    <div class="position-relative me-3">
+                                        <img src="https://ui-avatars.com/api/?name=School+Nurse&background=fd7e14&color=fff&size=200" 
+                                             alt="School Nurse" class="notification-avatar">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">Health Check Reminder</h6>
+                                                <p class="mb-1">Olivia's immunization records need to be updated. Please submit the required documents by June 10th.</p>
+                                            </div>
+                                            <div class="text-end" style="min-width: 100px;">
+                                                <span class="notification-category category-alert">Alert</span>
+                                                <div class="notification-time mt-1">May 26</div>
+                                            </div>
+                                        </div>
+                                        <div class="notification-actions mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary me-1">
+                                                <i class="bi bi-check2"></i> Mark as read
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center p-3">
+                                <button class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-arrow-clockwise"></i> Load More Notifications
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Notification Settings Modal -->
+    <div class="modal fade" id="notificationSettingsModal" tabindex="-1" aria-labelledby="notificationSettingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationSettingsModalLabel">Notification Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="notificationSettingsForm">
+                        <div class="mb-3">
+                            <h6>Email Notifications</h6>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="emailAlerts" checked>
+                                <label class="form-check-label" for="emailAlerts">Alerts & Emergencies</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="emailUpdates" checked>
+                                <label class="form-check-label" for="emailUpdates">Daily/Weekly Updates</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="emailReminders" checked>
+                                <label class="form-check-label" for="emailReminders">Reminders</label>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <h6>Push Notifications</h6>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="pushAlerts" checked>
+                                <label class="form-check-label" for="pushAlerts">Alerts & Emergencies</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="pushUpdates">
+                                <label class="form-check-label" for="pushUpdates">Daily/Weekly Updates</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="pushReminders" checked>
+                                <label class="form-check-label" for="pushReminders">Reminders</label>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label for="notificationFrequency" class="form-label">Email Notification Frequency</label>
+                            <select class="form-select" id="notificationFrequency">
+                                <option value="immediate">Immediate (as they come in)</option>
+                                <option value="hourly" selected>Hourly Digest</option>
+                                <option value="daily">Daily Digest</option>
+                            </select>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="muteNotifications" checked>
+                            <label class="form-check-label" for="muteNotifications">Mute notifications during quiet hours (10:00 PM - 7:00 AM)</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveNotificationSettings">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Title</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message">
+                Message goes here
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isAuthenticated()) {
+                window.location.href = 'parent-login.html';
+                return;
+            }
+
+            // Initialize toast
+            const toastEl = document.getElementById('toast');
+            const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+
+            // Show toast function
+            window.showToast = function(title, message, type = 'info') {
+                const toastTitle = document.getElementById('toast-title');
+                const toastMessage = document.getElementById('toast-message');
+                const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                
+                toastTitle.textContent = title;
+                toastMessage.textContent = message;
+                toastEl.className = `toast ${type === 'error' ? 'bg-danger text-white' : type === 'success' ? 'bg-success text-white' : ''}`;
+                toast.show();
+            };
+
+            // Mark all as read
+            const markAllReadBtn = document.getElementById('markAllRead');
+            if (markAllReadBtn) {
+                markAllReadBtn.addEventListener('click', function() {
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                        // Here you would typically make an API call to mark notifications as read
+                    });
+                    updateUnreadCount();
+                    showToast('Success', 'All notifications marked as read', 'success');
+                });
+            }
+
+            // Clear all notifications
+            const clearAllBtn = document.getElementById('clearAll');
+            if (clearAllBtn) {
+                clearAllBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
+                        // Here you would typically make an API call to clear all notifications
+                        document.getElementById('notificationsList').innerHTML = '<div class="text-center p-4">No notifications to display</div>';
+                        updateUnreadCount();
+                        showToast('Success', 'All notifications cleared', 'success');
+                    }
+                });
+            }
+
+            // Mark individual notification as read
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.mark-as-read')) {
+                    const notificationItem = e.target.closest('.notification-item');
+                    const notificationId = e.target.closest('.mark-as-read').getAttribute('data-id');
+                    
+                    // Here you would typically make an API call to mark this specific notification as read
+                    notificationItem.classList.remove('unread');
+                    updateUnreadCount();
+                    showToast('Success', 'Notification marked as read', 'success');
+                }
+            });
+
+            // Filter notifications
+            const filterLinks = document.querySelectorAll('[data-filter]');
+            filterLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const filter = this.getAttribute('data-filter');
+                    
+                    // Update active state
+                    filterLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Apply filter
+                    document.querySelectorAll('.notification-item').forEach(item => {
+                        if (filter === 'all') {
+                            item.style.display = '';
+                        } else if (filter === 'unread') {
+                            item.style.display = item.classList.contains('unread') ? '' : 'none';
+                        } else {
+                            item.style.display = item.getAttribute('data-category') === filter ? '' : 'none';
+                        }
+                    });
+                });
+            });
+
+            // Select all checkboxes
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('#todayNotifications .form-check-input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = selectAllCheckbox.checked;
+                    });
+                });
+            }
+
+            const selectAllOlderCheckbox = document.getElementById('selectAllOlder');
+            if (selectAllOlderCheckbox) {
+                selectAllOlderCheckbox.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('#olderNotifications .form-check-input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = selectAllOlderCheckbox.checked;
+                    });
+                });
+            }
+
+            // Save notification settings
+            const saveSettingsBtn = document.getElementById('saveNotificationSettings');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', function() {
+                    // Here you would typically save the notification settings to your backend
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('notificationSettingsModal'));
+                    modal.hide();
+                    showToast('Success', 'Notification settings saved', 'success');
+                });
+            }
+
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Clear authentication
+                    localStorage.removeItem('safekids_auth_token');
+                    window.location.href = 'parent-login.html';
+                });
+            }
+
+            // Update unread count
+            function updateUnreadCount() {
+                const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+                const unreadCountElement = document.getElementById('unreadCount');
+                
+                if (unreadCountElement) {
+                    if (unreadCount > 0) {
+                        unreadCountElement.textContent = unreadCount;
+                        unreadCountElement.style.display = 'block';
+                    } else {
+                        unreadCountElement.style.display = 'none';
+                    }
+                }
+            }
+
+            // Initialize unread count
+            updateUnreadCount();
+        });
+    </script>
+</body>
+</html>

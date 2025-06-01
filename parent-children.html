@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Children - SafeKids</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: #0d6efd;
+            color: white;
+            padding: 1rem 0;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .child-card {
+            transition: transform 0.2s;
+            height: 100%;
+        }
+        .child-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .child-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="text-center mb-4">
+                    <h4>SafeKids</h4>
+                    <p class="text-muted mb-0">Parent Portal</p>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-dashboard.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-profile.html">
+                            <i class="bi bi-person"></i> My Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="parent-children.html">
+                            <i class="bi bi-people"></i> My Children
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-history.html">
+                            <i class="bi bi-clock-history"></i> Pickup History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-notifications.html">
+                            <i class="bi bi-bell"></i> Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-danger" href="#" id="logoutBtn">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+                    <h1 class="h2">My Children</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addChildModal">
+                        <i class="bi bi-plus-lg"></i> Add Child
+                    </button>
+                </div>
+
+                <!-- Children Grid -->
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="childrenGrid">
+                    <!-- Child cards will be dynamically inserted here -->
+                    <div class="col">
+                        <div class="card child-card text-center p-4">
+                            <div class="position-relative">
+                                <img src="https://ui-avatars.com/api/?name=Emma+Smith&background=4e73df&color=fff&size=200" 
+                                     alt="Emma Smith" class="child-avatar mb-3">
+                                <span class="badge bg-success status-badge">Checked In</span>
+                            </div>
+                            <h5 class="mb-1">Emma Smith</h5>
+                            <p class="text-muted mb-2">Grade 3 - Room 12</p>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewChildModal" data-child-id="1">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editChildModal" data-child-id="1">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="card child-card text-center p-4">
+                            <div class="position-relative">
+                                <img src="https://ui-avatars.com/api/?name=Noah+Johnson&background=36b9cc&color=fff&size=200" 
+                                     alt="Noah Johnson" class="child-avatar mb-3">
+                                <span class="badge bg-warning text-dark status-badge">Absent</span>
+                            </div>
+                            <h5 class="mb-1">Noah Johnson</h5>
+                            <p class="text-muted mb-2">Grade 1 - Room 8</p>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewChildModal" data-child-id="2">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editChildModal" data-child-id="2">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="card child-card text-center p-4">
+                            <div class="position-relative">
+                                <img src="https://ui-avatars.com/api/?name=Olivia+Williams&background=1cc88a&color=fff&size=200" 
+                                     alt="Olivia Williams" class="child-avatar mb-3">
+                                <span class="badge bg-danger status-badge">Checked Out</span>
+                            </div>
+                            <h5 class="mb-1">Olivia Williams</h5>
+                            <p class="text-muted mb-2">Pre-K - Room 4</p>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewChildModal" data-child-id="3">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editChildModal" data-child-id="3">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Child Modal -->
+    <div class="modal fade" id="addChildModal" tabindex="-1" aria-labelledby="addChildModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addChildModalLabel">Add New Child</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addChildForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="childFirstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="childFirstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="childLastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="childLastName" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="childDob" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="childDob" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="childGender" class="form-label">Gender</label>
+                                <select class="form-select" id="childGender" required>
+                                    <option value="">Select gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="childGrade" class="form-label">Grade/Class</label>
+                                <input type="text" class="form-control" id="childGrade" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="childRoom" class="form-label">Room/Teacher</label>
+                                <input type="text" class="form-control" id="childRoom">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childAllergies" class="form-label">Allergies/Special Needs</label>
+                            <textarea class="form-control" id="childAllergies" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childNotes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="childNotes" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childPhoto" class="form-label">Profile Photo</label>
+                            <input class="form-control" type="file" id="childPhoto" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Child</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Child Modal -->
+    <div class="modal fade" id="viewChildModal" tabindex="-1" aria-labelledby="viewChildModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewChildModalLabel">Child Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <img src="https://ui-avatars.com/api/?name=Emma+Smith&background=4e73df&color=fff&size=200" 
+                                 alt="Child Photo" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                            <h5 class="mb-1">Emma Smith</h5>
+                            <p class="text-muted mb-2">Grade 3 - Room 12</p>
+                            <span class="badge bg-success">Checked In</span>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-1">Date of Birth</h6>
+                                    <p class="mb-3">March 15, 2016</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-1">Age</h6>
+                                    <p class="mb-3">7 years</p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-1">Allergies/Special Needs</h6>
+                                <p>Peanut allergy, Asthma</p>
+                            </div>
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-1">Additional Notes</h6>
+                                <p>Needs to take medication at 12 PM daily.</p>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Current Status:</strong> Checked in at 8:15 AM with Ms. Johnson
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Child Modal -->
+    <div class="modal fade" id="editChildModal" tabindex="-1" aria-labelledby="editChildModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editChildModalLabel">Edit Child Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editChildForm">
+                    <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Emma+Smith&background=4e73df&color=fff&size=200" 
+                                 alt="Child Photo" class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;" id="editChildPhotoPreview">
+                            <div>
+                                <input type="file" class="d-none" id="editChildPhotoInput" accept="image/*">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('editChildPhotoInput').click()">
+                                    <i class="bi bi-camera"></i> Change Photo
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editChildFirstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="editChildFirstName" value="Emma" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editChildLastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="editChildLastName" value="Smith" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editChildDob" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="editChildDob" value="2016-03-15" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editChildGender" class="form-label">Gender</label>
+                                <select class="form-select" id="editChildGender" required>
+                                    <option value="female" selected>Female</option>
+                                    <option value="male">Male</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editChildGrade" class="form-label">Grade/Class</label>
+                                <input type="text" class="form-control" id="editChildGrade" value="Grade 3" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editChildRoom" class="form-label">Room/Teacher</label>
+                                <input type="text" class="form-control" id="editChildRoom" value="Room 12 - Ms. Johnson">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editChildAllergies" class="form-label">Allergies/Special Needs</label>
+                            <textarea class="form-control" id="editChildAllergies" rows="3">Peanut allergy, Asthma</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editChildNotes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="editChildNotes" rows="2">Needs to take medication at 12 PM daily.</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-danger me-auto" id="deleteChildBtn">
+                            <i class="bi bi-trash"></i> Remove Child
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Title</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message">
+                Message goes here
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isAuthenticated()) {
+                window.location.href = 'parent-login.html';
+                return;
+            }
+
+            // Initialize toast
+            const toastEl = document.getElementById('toast');
+            const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+
+            // Show toast function
+            window.showToast = function(title, message, type = 'info') {
+                const toastTitle = document.getElementById('toast-title');
+                const toastMessage = document.getElementById('toast-message');
+                const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                
+                toastTitle.textContent = title;
+                toastMessage.textContent = message;
+                toastEl.className = `toast ${type === 'error' ? 'bg-danger text-white' : type === 'success' ? 'bg-success text-white' : ''}`;
+                toast.show();
+            };
+
+            // Initialize Select2
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+
+            // Handle child photo preview
+            const editChildPhotoInput = document.getElementById('editChildPhotoInput');
+            const editChildPhotoPreview = document.getElementById('editChildPhotoPreview');
+            
+            if (editChildPhotoInput && editChildPhotoPreview) {
+                editChildPhotoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            editChildPhotoPreview.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Handle add child form submission
+            const addChildForm = document.getElementById('addChildForm');
+            if (addChildForm) {
+                addChildForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    // Here you would typically send the form data to your server
+                    showToast('Success', 'Child added successfully', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addChildModal'));
+                    modal.hide();
+                    this.reset();
+                });
+            }
+
+            // Handle edit child form submission
+            const editChildForm = document.getElementById('editChildForm');
+            if (editChildForm) {
+                editChildForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    // Here you would typically send the updated data to your server
+                    showToast('Success', 'Child information updated', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editChildModal'));
+                    modal.hide();
+                });
+            }
+
+            // Handle delete child button
+            const deleteChildBtn = document.getElementById('deleteChildBtn');
+            if (deleteChildBtn) {
+                deleteChildBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to remove this child? This action cannot be undone.')) {
+                        // Here you would typically send a delete request to your server
+                        showToast('Success', 'Child removed successfully', 'success');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editChildModal'));
+                        modal.hide();
+                    }
+                });
+            }
+
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Clear authentication
+                    localStorage.removeItem('safekids_auth_token');
+                    window.location.href = 'parent-login.html';
+                });
+            }
+
+            // Load children data
+            loadChildren();
+        });
+
+        // Load children data
+        async function loadChildren() {
+            try {
+                // Simulate API call
+                // In a real app, you would fetch this from your backend
+                setTimeout(() => {
+                    // This would be populated from the API response
+                    const children = [
+                        {
+                            id: 1,
+                            firstName: 'Emma',
+                            lastName: 'Smith',
+                            grade: 'Grade 3',
+                            room: 'Room 12 - Ms. Johnson',
+                            status: 'checked-in',
+                            statusText: 'Checked In',
+                            statusClass: 'bg-success',
+                            photo: 'https://ui-avatars.com/api/?name=Emma+Smith&background=4e73df&color=fff&size=200',
+                            dob: '2016-03-15',
+                            gender: 'female',
+                            allergies: 'Peanut allergy, Asthma',
+                            notes: 'Needs to take medication at 12 PM daily.'
+                        },
+                        {
+                            id: 2,
+                            firstName: 'Noah',
+                            lastName: 'Johnson',
+                            grade: 'Grade 1',
+                            room: 'Room 8 - Mr. Brown',
+                            status: 'absent',
+                            statusText: 'Absent',
+                            statusClass: 'bg-warning text-dark',
+                            photo: 'https://ui-avatars.com/api/?name=Noah+Johnson&background=36b9cc&color=fff&size=200',
+                            dob: '2018-07-22',
+                            gender: 'male',
+                            allergies: 'None',
+                            notes: ''
+                        },
+                        {
+                            id: 3,
+                            firstName: 'Olivia',
+                            lastName: 'Williams',
+                            grade: 'Pre-K',
+                            room: 'Room 4 - Ms. Davis',
+                            status: 'checked-out',
+                            statusText: 'Checked Out',
+                            statusClass: 'bg-danger',
+                            photo: 'https://ui-avatars.com/api/?name=Olivia+Williams&background=1cc88a&color=fff&size=200',
+                            dob: '2019-11-05',
+                            gender: 'female',
+                            allergies: 'Dairy intolerance',
+                            notes: 'Has an older sister in Grade 2.'
+                        }
+                    ];
+
+                    const childrenGrid = document.getElementById('childrenGrid');
+                    if (childrenGrid) {
+                        // Clear existing children (except the template)
+                        childrenGrid.innerHTML = '';
+
+                        // Add each child to the grid
+                        children.forEach(child => {
+                            const childCard = `
+                                <div class="col">
+                                    <div class="card child-card text-center p-4">
+                                        <div class="position-relative">
+                                            <img src="${child.photo}" 
+                                                 alt="${child.firstName} ${child.lastName}" class="child-avatar mb-3">
+                                            <span class="badge ${child.statusClass} status-badge">${child.statusText}</span>
+                                        </div>
+                                        <h5 class="mb-1">${child.firstName} ${child.lastName}</h5>
+                                        <p class="text-muted mb-2">${child.grade} - ${child.room.split(' - ')[0]}</p>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-primary view-child" 
+                                                    data-child-id="${child.id}" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#viewChildModal">
+                                                <i class="bi bi-eye"></i> View
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary edit-child" 
+                                                    data-child-id="${child.id}" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editChildModal">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            childrenGrid.insertAdjacentHTML('beforeend', childCard);
+                        });
+
+                        // Add event listeners to view buttons
+                        document.querySelectorAll('.view-child').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const childId = this.getAttribute('data-child-id');
+                                // Here you would typically fetch the child's details from your server
+                                const child = children.find(c => c.id === parseInt(childId));
+                                if (child) {
+                                    // Update the view modal with the child's details
+                                    document.getElementById('viewChildModalLabel').textContent = `${child.firstName} ${child.lastName}'s Details`;
+                                    document.querySelector('#viewChildModal .modal-body img').src = child.photo;
+                                    document.querySelector('#viewChildModal .modal-body h5').textContent = `${child.firstName} ${child.lastName}`;
+                                    document.querySelector('#viewChildModal .modal-body p.text-muted').textContent = `${child.grade} - ${child.room}`;
+                                    document.querySelector('#viewChildModal .modal-body .badge').className = `badge ${child.statusClass}`;
+                                    document.querySelector('#viewChildModal .modal-body .badge').textContent = child.statusText;
+                                    
+                                    // Calculate age from DOB
+                                    const dob = new Date(child.dob);
+                                    const today = new Date();
+                                    let age = today.getFullYear() - dob.getFullYear();
+                                    const monthDiff = today.getMonth() - dob.getMonth();
+                                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                                        age--;
+                                    }
+                                    
+                                    document.querySelector('#viewChildModal .modal-body p:last-child').textContent = `${age} years`;
+                                }
+                            });
+                        });
+
+                        // Add event listeners to edit buttons
+                        document.querySelectorAll('.edit-child').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const childId = this.getAttribute('data-child-id');
+                                // Here you would typically fetch the child's details from your server
+                                const child = children.find(c => c.id === parseInt(childId));
+                                if (child) {
+                                    // Update the edit form with the child's details
+                                    document.getElementById('editChildModalLabel').textContent = `Edit ${child.firstName}'s Information`;
+                                    document.getElementById('editChildPhotoPreview').src = child.photo;
+                                    document.getElementById('editChildFirstName').value = child.firstName;
+                                    document.getElementById('editChildLastName').value = child.lastName;
+                                    document.getElementById('editChildDob').value = child.dob;
+                                    document.getElementById('editChildGender').value = child.gender;
+                                    document.getElementById('editChildGrade').value = child.grade;
+                                    document.getElementById('editChildRoom').value = child.room;
+                                    document.getElementById('editChildAllergies').value = child.allergies;
+                                    document.getElementById('editChildNotes').value = child.notes;
+                                    document.getElementById('deleteChildBtn').setAttribute('data-child-id', child.id);
+                                }
+                            });
+                        });
+                    }
+                }, 500);
+            } catch (error) {
+                console.error('Error loading children:', error);
+                showToast('Error', 'Failed to load children', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

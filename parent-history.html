@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickup History - SafeKids</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: #0d6efd;
+            color: white;
+            padding: 1rem 0;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .filter-card {
+            margin-bottom: 1.5rem;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        }
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+            margin: 2rem 0;
+        }
+        .timeline:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 1.5rem;
+            width: 2px;
+            background: #e9ecef;
+            margin-left: -1px;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: -3rem;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: #0d6efd;
+            border: 3px solid white;
+            z-index: 1;
+        }
+        .timeline-item .card {
+            border-left: 3px solid #0d6efd;
+        }
+        .badge-checkin {
+            background-color: #198754;
+            color: white;
+        }
+        .badge-checkout {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-early {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .badge-late {
+            background-color: #fd7e14;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="text-center mb-4">
+                    <h4>SafeKids</h4>
+                    <p class="text-muted mb-0">Parent Portal</p>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-dashboard.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-profile.html">
+                            <i class="bi bi-person"></i> My Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-children.html">
+                            <i class="bi bi-people"></i> My Children
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="parent-history.html">
+                            <i class="bi bi-clock-history"></i> Pickup History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="parent-notifications.html">
+                            <i class="bi bi-bell"></i> Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-danger" href="#" id="logoutBtn">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+                    <h1 class="h2">Pickup History</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="exportBtn">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Card -->
+                <div class="card filter-card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="filterChild" class="form-label">Child</label>
+                                <select class="form-select" id="filterChild">
+                                    <option value="" selected>All Children</option>
+                                    <option value="1">Emma Smith</option>
+                                    <option value="2">Noah Johnson</option>
+                                    <option value="3">Olivia Williams</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filterType" class="form-label">Type</label>
+                                <select class="form-select" id="filterType">
+                                    <option value="" selected>All Types</option>
+                                    <option value="checkin">Check-in</option>
+                                    <option value="checkout">Check-out</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filterDateFrom" class="form-label">From</label>
+                                <input type="date" class="form-control" id="filterDateFrom">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filterDateTo" class="form-label">To</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="filterDateTo">
+                                    <button class="btn btn-outline-secondary" type="button" id="applyFilters">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline View (Default) -->
+                <div class="timeline-view">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Recent Activity</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary active" id="timelineViewBtn">
+                                <i class="bi bi-list-ul"></i> Timeline
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="tableViewBtn">
+                                <i class="bi bi-table"></i> Table
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="timeline" id="timeline">
+                        <!-- Timeline items will be dynamically inserted here -->
+                        <div class="timeline-item">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="card-title mb-0">Check-out</h6>
+                                        <span class="badge bg-primary">Today</span>
+                                    </div>
+                                    <p class="card-text mb-1">Emma Smith was checked out by John Doe (Parent)</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock"></i> 3:45 PM
+                                        </small>
+                                        <span class="badge bg-success">On Time</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="card-title mb-0">Check-in</h6>
+                                        <span class="badge bg-secondary">Today</span>
+                                    </div>
+                                    <p class="card-text mb-1">Noah Johnson was checked in by Jane Smith (Guardian)</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock"></i> 8:15 AM
+                                        </small>
+                                        <span class="badge bg-warning text-dark">15 min late</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="card-title mb-0">Check-out</h6>
+                                        <span class="badge bg-secondary">Yesterday</span>
+                                    </div>
+                                    <p class="card-text mb-1">Olivia Williams was checked out by Robert Williams (Parent)</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock"></i> 3:30 PM
+                                        </small>
+                                        <span class="badge bg-success">On Time</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table View (Hidden by default) -->
+                <div class="table-view d-none">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="historyTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Child</th>
+                                            <th>Type</th>
+                                            <th>Time</th>
+                                            <th>Authorized By</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Today</td>
+                                            <td>Emma Smith</td>
+                                            <td><span class="badge bg-danger">Check-out</span></td>
+                                            <td>3:45 PM</td>
+                                            <td>John Doe (Parent)</td>
+                                            <td><span class="badge bg-success">On Time</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Today</td>
+                                            <td>Noah Johnson</td>
+                                            <td><span class="badge bg-success">Check-in</span></td>
+                                            <td>8:15 AM</td>
+                                            <td>Jane Smith (Guardian)</td>
+                                            <td><span class="badge bg-warning text-dark">15 min late</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Yesterday</td>
+                                            <td>Olivia Williams</td>
+                                            <td><span class="badge bg-danger">Check-out</span></td>
+                                            <td>3:30 PM</td>
+                                            <td>Robert Williams (Parent)</td>
+                                            <td><span class="badge bg-success">On Time</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Yesterday</td>
+                                            <td>Emma Smith</td>
+                                            <td><span class="badge bg-success">Check-in</span></td>
+                                            <td>8:00 AM</td>
+                                            <td>John Doe (Parent)</td>
+                                            <td><span class="badge bg-success">On Time</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- View Details Modal -->
+    <div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewDetailsModalLabel">Check-out Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Child:</div>
+                        <div class="col-8">Emma Smith</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Type:</div>
+                        <div class="col-8"><span class="badge bg-danger">Check-out</span></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Date & Time:</div>
+                        <div class="col-8">May 31, 2023 3:45 PM</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Authorized By:</div>
+                        <div class="col-8">John Doe (Parent)</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Status:</div>
+                        <div class="col-8"><span class="badge bg-success">On Time</span></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Notes:</div>
+                        <div class="col-8">Picked up after soccer practice</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 fw-bold">Location:</div>
+                        <div class="col-8">Main Entrance (GPS: 40.7128° N, 74.0060° W)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">
+                        <i class="bi bi-printer"></i> Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="filterForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="modalFilterChild" class="form-label">Child</label>
+                            <select class="form-select" id="modalFilterChild">
+                                <option value="" selected>All Children</option>
+                                <option value="1">Emma Smith</option>
+                                <option value="2">Noah Johnson</option>
+                                <option value="3">Olivia Williams</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalFilterType" class="form-label">Type</label>
+                            <select class="form-select" id="modalFilterType">
+                                <option value="" selected>All Types</option>
+                                <option value="checkin">Check-in</option>
+                                <option value="checkout">Check-out</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalFilterStatus" class="form-label">Status</label>
+                            <select class="form-select" id="modalFilterStatus">
+                                <option value="" selected>All Statuses</option>
+                                <option value="on_time">On Time</option>
+                                <option value="early">Early</option>
+                                <option value="late">Late</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="modalFilterDateFrom" class="form-label">From Date</label>
+                                <input type="date" class="form-control" id="modalFilterDateFrom">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="modalFilterDateTo" class="form-label">To Date</label>
+                                <input type="date" class="form-control" id="modalFilterDateTo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link text-muted me-auto" id="resetFilters">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Title</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message">
+                Message goes here
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isAuthenticated()) {
+                window.location.href = 'parent-login.html';
+                return;
+            }
+
+            // Initialize toast
+            const toastEl = document.getElementById('toast');
+            const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+
+            // Show toast function
+            window.showToast = function(title, message, type = 'info') {
+                const toastTitle = document.getElementById('toast-title');
+                const toastMessage = document.getElementById('toast-message');
+                const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                
+                toastTitle.textContent = title;
+                toastMessage.textContent = message;
+                toastEl.className = `toast ${type === 'error' ? 'bg-danger text-white' : type === 'success' ? 'bg-success text-white' : ''}`;
+                toast.show();
+            };
+
+            // Initialize DataTable
+            const historyTable = $('#historyTable').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 10,
+                responsive: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search history...",
+                    lengthMenu: "Show _MENU_ entries per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "Showing 0 to 0 of 0 entries",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                }
+            });
+
+            // Toggle between timeline and table view
+            const timelineViewBtn = document.getElementById('timelineViewBtn');
+            const tableViewBtn = document.getElementById('tableViewBtn');
+            const timelineView = document.querySelector('.timeline-view');
+            const tableView = document.querySelector('.table-view');
+
+            if (timelineViewBtn && tableViewBtn && timelineView && tableView) {
+                timelineViewBtn.addEventListener('click', function() {
+                    this.classList.add('active');
+                    tableViewBtn.classList.remove('active');
+                    timelineView.classList.remove('d-none');
+                    tableView.classList.add('d-none');
+                });
+
+                tableViewBtn.addEventListener('click', function() {
+                    this.classList.add('active');
+                    timelineViewBtn.classList.remove('active');
+                    timelineView.classList.add('d-none');
+                    tableView.classList.remove('d-none');
+                });
+            }
+
+            // Apply filters
+            const applyFiltersBtn = document.getElementById('applyFilters');
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', function() {
+                    // Here you would typically filter the data
+                    showToast('Info', 'Filters applied', 'info');
+                });
+            }
+
+            // Reset filters
+            const resetFiltersBtn = document.getElementById('resetFilters');
+            if (resetFiltersBtn) {
+                resetFiltersBtn.addEventListener('click', function() {
+                    document.getElementById('modalFilterChild').value = '';
+                    document.getElementById('modalFilterType').value = '';
+                    document.getElementById('modalFilterStatus').value = '';
+                    document.getElementById('modalFilterDateFrom').value = '';
+                    document.getElementById('modalFilterDateTo').value = '';
+                });
+            }
+
+            // Submit filter form
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    // Here you would typically apply the filters
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
+                    modal.hide();
+                    showToast('Success', 'Filters applied successfully', 'success');
+                });
+            }
+
+            // Export button
+            const exportBtn = document.getElementById('exportBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    // Here you would typically export the data
+                    showToast('Info', 'Exporting data...', 'info');
+                    // Simulate export
+                    setTimeout(() => {
+                        showToast('Success', 'Data exported successfully', 'success');
+                    }, 1500);
+                });
+            }
+
+            // View details button in table
+            $('#historyTable').on('click', '.btn-outline-primary', function() {
+                // Show the view details modal
+                const viewModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+                viewModal.show();
+            });
+
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Clear authentication
+                    localStorage.removeItem('safekids_auth_token');
+                    window.location.href = 'parent-login.html';
+                });
+            }
+
+            // Load pickup history data
+            loadPickupHistory();
+        });
+
+        // Load pickup history data
+        async function loadPickupHistory() {
+            try {
+                // Simulate API call
+                // In a real app, you would fetch this from your backend
+                setTimeout(() => {
+                    // This would be populated from the API response
+                    const history = [
+                        {
+                            id: 1,
+                            date: 'Today',
+                            childId: 1,
+                            childName: 'Emma Smith',
+                            type: 'checkout',
+                            typeText: 'Check-out',
+                            typeClass: 'bg-danger',
+                            time: '3:45 PM',
+                            authorizedBy: 'John Doe (Parent)',
+                            status: 'on_time',
+                            statusText: 'On Time',
+                            statusClass: 'bg-success'
+                        },
+                        {
+                            id: 2,
+                            date: 'Today',
+                            childId: 2,
+                            childName: 'Noah Johnson',
+                            type: 'checkin',
+                            typeText: 'Check-in',
+                            typeClass: 'bg-success',
+                            time: '8:15 AM',
+                            authorizedBy: 'Jane Smith (Guardian)',
+                            status: 'late',
+                            statusText: '15 min late',
+                            statusClass: 'bg-warning text-dark'
+                        },
+                        {
+                            id: 3,
+                            date: 'Yesterday',
+                            childId: 3,
+                            childName: 'Olivia Williams',
+                            type: 'checkout',
+                            typeText: 'Check-out',
+                            typeClass: 'bg-danger',
+                            time: '3:30 PM',
+                            authorizedBy: 'Robert Williams (Parent)',
+                            status: 'on_time',
+                            statusText: 'On Time',
+                            statusClass: 'bg-success'
+                        },
+                        {
+                            id: 4,
+                            date: 'Yesterday',
+                            childId: 1,
+                            childName: 'Emma Smith',
+                            type: 'checkin',
+                            typeText: 'Check-in',
+                            typeClass: 'bg-success',
+                            time: '8:00 AM',
+                            authorizedBy: 'John Doe (Parent)',
+                            status: 'on_time',
+                            statusText: 'On Time',
+                            statusClass: 'bg-success'
+                        }
+                    ];
+
+                    // Update the timeline view
+                    const timeline = document.getElementById('timeline');
+                    if (timeline) {
+                        // Clear existing timeline items (except the first one which is a template)
+                        while (timeline.children.length > 1) {
+                            timeline.removeChild(timeline.lastChild);
+                        }
+
+                        // Add each history item to the timeline
+                        history.forEach(item => {
+                            const timelineItem = document.createElement('div');
+                            timelineItem.className = 'timeline-item';
+                            timelineItem.innerHTML = `
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="card-title mb-0">${item.typeText}</h6>
+                                            <span class="badge ${item.date === 'Today' ? 'bg-primary' : 'bg-secondary'}">${item.date}</span>
+                                        </div>
+                                        <p class="card-text mb-1">${item.childName} was ${item.type === 'checkin' ? 'checked in' : 'checked out'} by ${item.authorizedBy}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i> ${item.time}
+                                            </small>
+                                            <span class="badge ${item.statusClass}">${item.statusText}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            timeline.appendChild(timelineItem);
+                        });
+                    }
+
+                    // Update the table view (DataTable will handle this)
+                    const table = $('#historyTable').DataTable();
+                    table.clear();
+                    
+                    history.forEach(item => {
+                        table.row.add([
+                            item.date,
+                            item.childName,
+                            `<span class="badge ${item.typeClass}">${item.typeText}</span>`,
+                            item.time,
+                            item.authorizedBy,
+                            `<span class="badge ${item.statusClass}">${item.statusText}</span>`,
+                            `<button class="btn btn-sm btn-outline-primary view-details" data-id="${item.id}">
+                                <i class="bi bi-eye"></i> View
+                            </button>`
+                        ]);
+                    });
+                    
+                    table.draw();
+                }, 500);
+            } catch (error) {
+                console.error('Error loading pickup history:', error);
+                showToast('Error', 'Failed to load pickup history', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
